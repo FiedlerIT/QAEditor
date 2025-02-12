@@ -1,4 +1,5 @@
 # Work at second branch version
+# Work at second branch version
 $csvPath = "D:\EPL-Projekte\SW\PS_Zertifikationssw\QA.csv"
 
 # CSV-Datei einlesen
@@ -21,11 +22,14 @@ function Select-Category {
     $choice = Read-Host "Geben Sie die Nummer der Kategorie ein"
     if ($choice -as [int] -and $choice -ge 1 -and $choice -le $categories.Count) {
         return $categories[$choice - 1]
+        return $categories[$choice - 1]
     } else {
         Write-Host "Ungültige Eingabe."
         return $null
     }
 }
+
+# Info anzeigen
 
 # Info anzeigen
 function Show-Info {
@@ -39,24 +43,30 @@ function Show-Info {
 }
 
 # Fragen stellen und Punkte berechnen
+
+# Fragen stellen und Punkte berechnen
 function Ask-Questions {
     param (
         [array]$Questions,
         [string]$Category
     )
 
+
     $filteredQuestions = $Questions | Where-Object { $_.Kategorie -eq $Category }
     
     if (-not $filteredQuestions) {
+        Write-Host "Keine Fragen gefunden."
         Write-Host "Keine Fragen gefunden."
         return
     }
 
     $totalQuestions = $filteredQuestions.Count
     $correctCount = 0  # Zähler für korrekte Antworten
+    $startTime = Get-Date  # Startzeit erfassen
 
     foreach ($question in $filteredQuestions) {
         Write-Host "Frage: $($question.Frage)"
+        
         
         if ($question.Info) {
             Show-Info -InfoText $question.Info
@@ -75,6 +85,8 @@ function Ask-Questions {
         $userAnswers = $response -split "," | ForEach-Object { $_.Trim() -as [int] }
         
         # Korrekte Antworten aus der CSV ermitteln
+        
+        # Korrekte Antworten aus der CSV ermitteln
         $correctAnswers = @()
         for ($i = 1; $i -le 5; $i++) {
             if ($question."Antwort${i}_Korrekt" -eq "True") {
@@ -83,12 +95,26 @@ function Ask-Questions {
         }
 
         # Prüfen, ob alle korrekten Antworten exakt gewählt wurden
+        # Prüfen, ob alle korrekten Antworten exakt gewählt wurden
         if (($userAnswers | Sort-Object | Compare-Object -ReferenceObject ($correctAnswers | Sort-Object) -PassThru | Measure-Object).Count -eq 0) {
             Write-Host "Korrekt!"
             $correctCount++
         } else {
             Write-Host "Falsch. Die korrekten Antworten waren: $($correctAnswers -join ', ')"
         }
+    }
+
+    $endTime = Get-Date  # Endzeit erfassen
+    $duration = $endTime - $startTime  # Dauer berechnen
+    
+    # Erfolgsquote berechnen
+    $successRate = if ($totalQuestions -gt 0) { [math]::Round(($correctCount / $totalQuestions) * 100, 2) } else { 0 }
+    
+    # Ergebnisse ausgeben
+    Write-Host "Test abgeschlossen."
+    Write-Host "Korrekt beantwortete Fragen: $correctCount von $totalQuestions"
+    Write-Host "Erfolgsquote: $successRate%"
+    Write-Host "Benötigte Zeit: $($duration.Minutes) Minuten und $($duration.Seconds) Sekunden"
     }
 
     # Erfolgsquote berechnen
