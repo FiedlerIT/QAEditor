@@ -1,10 +1,9 @@
-#Work at branch version
+# Work at second branch version
 $csvPath = "D:\EPL-Projekte\SW\PS_Zertifikationssw\QA.csv"
 
 # CSV-Datei einlesen
 function Load-Questions {
     Import-Csv -Path $csvPath
-    
 }
 
 # Kategorien anzeigen und auswählen
@@ -12,7 +11,6 @@ function Select-Category {
     param (
         [array]$Questions
     )
-    $Questions | Get-Member -MemberType Properties
     $categories = $Questions | Select-Object -ExpandProperty Kategorie -Unique
     Write-Host "Wählen Sie eine Kategorie aus:"
 
@@ -22,15 +20,14 @@ function Select-Category {
 
     $choice = Read-Host "Geben Sie die Nummer der Kategorie ein"
     if ($choice -as [int] -and $choice -ge 1 -and $choice -le $categories.Count) {
-        $singleCategory = $categories[$choice - 1]
-        #Write-Host "tempvar: '$tempvar' endetempvar"
-        return $singleCategory
+        return $categories[$choice - 1]
     } else {
         Write-Host "Ungültige Eingabe."
         return $null
     }
 }
-# Info anzeigen, wenn der Benutzer zustimmt
+
+# Info anzeigen
 function Show-Info {
     param (
         [string]$InfoText
@@ -40,29 +37,33 @@ function Show-Info {
         Write-Host "Info: $InfoText"
     }
 }
-# Fragen aus einer Kategorie anzeigen
+
+# Fragen stellen und Punkte berechnen
 function Ask-Questions {
     param (
         [array]$Questions,
         [string]$Category
     )
-    #$Questions | Format-List
-    #Write-Host " Kategorie: '$Category' ende"
+
     $filteredQuestions = $Questions | Where-Object { $_.Kategorie -eq $Category }
     
     if (-not $filteredQuestions) {
-        Write-Host "Keine unbeantworteten Fragen."
+        Write-Host "Keine Fragen gefunden."
         return
     }
 
+    $totalQuestions = $filteredQuestions.Count
+    $correctCount = 0  # Zähler für korrekte Antworten
+    $startTime = Get-Date  # Startzeit erfassen
+
     foreach ($question in $filteredQuestions) {
         Write-Host "Frage: $($question.Frage)"
-        # Zeige die Info an, falls verfügbar
+        
         if ($question.Info) {
             Show-Info -InfoText $question.Info
         }
+        
         $answers = @()
-
         for ($i = 1; $i -le 5; $i++) {
             $answer = $question."Antwort$i"
             if ($answer) {
@@ -73,24 +74,35 @@ function Ask-Questions {
 
         $response = Read-Host "Wählen Sie die Nummer(n) der korrekten Antwort(en), getrennt durch Kommas"
         $userAnswers = $response -split "," | ForEach-Object { $_.Trim() -as [int] }
+        
+        # Korrekte Antworten aus der CSV ermitteln
         $correctAnswers = @()
-
         for ($i = 1; $i -le 5; $i++) {
             if ($question."Antwort${i}_Korrekt" -eq "True") {
                 $correctAnswers += $i
             }
         }
 
+        # Prüfen, ob alle korrekten Antworten exakt gewählt wurden
         if (($userAnswers | Sort-Object | Compare-Object -ReferenceObject ($correctAnswers | Sort-Object) -PassThru | Measure-Object).Count -eq 0) {
             Write-Host "Korrekt!"
-            $question.Status = "Beantwortet"
+            $correctCount++
         } else {
-            Write-Host "Falsch. Die korrekten Antworten waren: $($correctAnswers -join ", ")"
+            Write-Host "Falsch. Die korrekten Antworten waren: $($correctAnswers -join ', ')"
         }
-        
     }
 
-    $Questions | Export-Csv -Path $csvPath -NoTypeInformation -Encoding UTF8
+    $endTime = Get-Date  # Endzeit erfassen
+    $duration = $endTime - $startTime  # Dauer berechnen
+    
+    # Erfolgsquote berechnen
+    $successRate = if ($totalQuestions -gt 0) { [math]::Round(($correctCount / $totalQuestions) * 100, 2) } else { 0 }
+    
+    # Ergebnisse ausgeben
+    Write-Host "Test abgeschlossen."
+    Write-Host "Korrekt beantwortete Fragen: $correctCount von $totalQuestions"
+    Write-Host "Erfolgsquote: $successRate%"
+    Write-Host "Benötigte Zeit: $($duration.Minutes) Minuten und $($duration.Seconds) Sekunden"
 }
 
 # Test zurücksetzen
@@ -100,8 +112,6 @@ function Reset-Test {
     )
 
     foreach ($question in $Questions) {
-        $tempvar = $question.Status
-        Write-Host "setteings: ' $tempvar' "
         $question.Status = "Unbeantwortet"
     }
 
@@ -121,11 +131,8 @@ function Main {
         $choice = Read-Host "Wählen Sie eine Option"
         switch ($choice) {
             "1" {
-                $categoryObject = Select-Category -Questions $questions
-                $category = $categoryObject[-1]
-                #Write-Host "anfang: '$teilstring' ende"
+                $category = Select-Category -Questions $questions
                 if ($category) {
-                   # Write-Host "übergabe Kategorie: '$category' endeübergabe"
                     Ask-Questions -Questions $questions -Category $category
                 }
             }
