@@ -86,10 +86,10 @@ function Ask-Questions {
 
         # Prüfen, ob alle korrekten Antworten exakt gewählt wurden
         if (($userAnswers | Sort-Object | Compare-Object -ReferenceObject ($correctAnswers | Sort-Object) -PassThru | Measure-Object).Count -eq 0) {
-            Write-Host "✅ Korrekt!"
+            Write-Host "Richtig!"
             $correctCount++
         } else {
-            Write-Host "❌ Falsch. Die korrekten Antworten waren: $($correctAnswers -join ', ')"
+            Write-Host "Falsch. Die korrekten Antworten waren: $($correctAnswers -join ', ')"
         }
     }
 
@@ -97,10 +97,10 @@ function Ask-Questions {
     $duration = $endTime - $startTime  # Dauer berechnen
     $successRate = if ($totalQuestions -gt 0) { [math]::Round(($correctCount / $totalQuestions) * 100, 2) } else { 0 }
 
-    Write-Host "`nTest abgeschlossen."
-    Write-Host "✅ Korrekt beantwortet: $correctCount von $totalQuestions"
-    Write-Host "📊 Erfolgsquote: $successRate%"
-    Write-Host "⏱️ Benötigte Zeit: $($duration.Minutes) Minuten und $($duration.Seconds) Sekunden"
+    Write-Host "Test abgeschlossen."
+    Write-Host "Korrekt beantwortet: $correctCount von $totalQuestions"
+    Write-Host "Erfolgsquote: $successRate%"
+    Write-Host "Benötigte Zeit: $($duration.Minutes) Minuten und $($duration.Seconds) Sekunden"
 }
 
 # Test zurücksetzen
@@ -112,7 +112,7 @@ function Reset-Test {
     }
 
     $Questions | Export-Csv -Path $csvPath -NoTypeInformation -Encoding UTF8
-    Write-Host "🔄 Der Test wurde zurückgesetzt."
+    Write-Host "Der Test wurde zurückgesetzt."
 }
 
 # Hauptmenü
@@ -138,11 +138,11 @@ function Main {
                 Reset-Test -Questions $questions
             }
             "3" {
-                Write-Host "👋 Programm beendet."
+                Write-Host "Programm beendet."
                 break
             }
             default {
-                Write-Host "❌ Ungültige Eingabe."
+                Write-Host "Ungültige Eingabe."
             }
         }
     }
