@@ -1,10 +1,14 @@
-# Work at second branch version
-$csvPath = "C:\Users\mfied\Documents\GitHub\QAEditor"
+$csvPath = "C:\Users\mfied\Documents\GitHub\QAEditor\QA.csv"
 
 # CSV-Datei einlesen
 function Load-Questions {
     if (Test-Path $csvPath) {
-        Import-Csv -Path $csvPath
+        try {
+            return Import-Csv -Path $csvPath -Encoding UTF8
+        } catch {
+            Write-Host "Fehler beim Einlesen der CSV-Datei: $_"
+            return @()
+        }
     } else {
         Write-Host "Fehler: Die Datei wurde nicht gefunden."
         return @()
@@ -15,7 +19,7 @@ function Load-Questions {
 function Select-Category {
     param ([array]$Questions)
 
-    $categories = $Questions | Select-Object -ExpandProperty Kategorie -Unique
+    $categories = $Questions | Where-Object { $_.Kategorie -ne $null } | Select-Object -ExpandProperty Kategorie -Unique
     if (-not $categories) {
         Write-Host "Keine Kategorien verfügbar."
         return $null
@@ -55,7 +59,7 @@ function Ask-Questions {
 
     $totalQuestions = $filteredQuestions.Count
     $correctCount = 0
-    $startTime = Get-Date  # Startzeit erfassen
+    $startTime = Get-Date
 
     foreach ($question in $filteredQuestions) {
         Write-Host "`nFrage: $($question.Frage)"
@@ -74,30 +78,29 @@ function Ask-Questions {
         }
 
         $response = Read-Host "Wählen Sie die Nummer(n) der korrekten Antwort(en), getrennt durch Kommas"
-        $userAnswers = $response -split "," | ForEach-Object { $_.Trim() -as [int] }
+        $userAnswers = $response -split "," | ForEach-Object { $_.Trim() } | Where-Object { $_ -match "^\d+$" } | ForEach-Object { [int]$_ }
 
-        # Korrekte Antworten aus der CSV ermitteln
         $correctAnswers = @()
         for ($i = 1; $i -le 5; $i++) {
-            if ($question."Antwort${i}_Korrekt" -eq $true) {
+            if ($question."Antwort${i}_Korrekt" -eq "TRUE") {
                 $correctAnswers += $i
             }
         }
 
-        # Prüfen, ob alle korrekten Antworten exakt gewählt wurden
-        if (($userAnswers | Sort-Object | Compare-Object -ReferenceObject ($correctAnswers | Sort-Object) -PassThru | Measure-Object).Count -eq 0) {
-            Write-Host "Richtig!"
+        # Prüfen auf exakte Übereinstimmung
+        if (($userAnswers | Sort-Object) -join ',' -eq ($correctAnswers | Sort-Object) -join ',') {
+            Write-Host "✅ Richtig!"
             $correctCount++
         } else {
-            Write-Host "Falsch. Die korrekten Antworten waren: $($correctAnswers -join ', ')"
+            Write-Host "❌ Falsch. Die korrekten Antworten waren: $($correctAnswers -join ', ')"
         }
     }
 
-    $endTime = Get-Date  # Endzeit erfassen
-    $duration = $endTime - $startTime  # Dauer berechnen
+    $endTime = Get-Date
+    $duration = $endTime - $startTime
     $successRate = if ($totalQuestions -gt 0) { [math]::Round(($correctCount / $totalQuestions) * 100, 2) } else { 0 }
 
-    Write-Host "Test abgeschlossen."
+    Write-Host "`n===== Testergebnis ====="
     Write-Host "Korrekt beantwortet: $correctCount von $totalQuestions"
     Write-Host "Erfolgsquote: $successRate%"
     Write-Host "Benötigte Zeit: $($duration.Minutes) Minuten und $($duration.Seconds) Sekunden"
@@ -138,8 +141,8 @@ function Main {
                 Reset-Test -Questions $questions
             }
             "3" {
-                Write-Host "Programm beendet."
-                break
+                Write-Host "👋 Programm beendet."
+                return
             }
             default {
                 Write-Host "Ungültige Eingabe."
