@@ -1,5 +1,5 @@
 # Work at second branch version
-$csvPath = "D:\EPL-Projekte\SW\PS_Zertifikationssw\QA.csv"
+$csvPath = "C:\Users\mfied\Documents\GitHub\QAEditor"
 
 # CSV-Datei einlesen
 function Load-Questions {

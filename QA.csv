@@ -1,0 +1,4 @@
+"Kategorie,Frage,Info,Antwort1,Antwort1_Korrekt,Antwort2,Antwort2_Korrekt,Antwort3,Antwort3_Korrekt,Antwort4,Antwort4_Korrekt,Antwort5,Antwort5_Korrekt,Status
+Allgemein,Was ist die Hauptstadt von Deutschland?,Berlin ist die Hauptstadt und größte Stadt Deutschlands.,Berlin,True,München,False,Hamburg,False,Köln,False,,False,Unbeantwortet
+Mathematik,Was ist 2 + 2?,Einfaches Additionsbeispiel.,3,False,4,True,5,False,,False,,False,Unbeantwortet
+Programmierung,Welche Sprache wird für Webentwicklung häufig verwendet?,HTML ist keine Programmiersprache sondern eine Markup-Sprache.,Python,False,HTML,True,Java,False,JavaScript,True,,False,Unbeantwortet"
