@@ -87,8 +87,8 @@ function Ask-Questions {
             }
         }
 
-        # Prüfen auf exakte Übereinstimmung
-        if (($userAnswers | Sort-Object) -join ',' -eq ($correctAnswers | Sort-Object) -join ',') {
+        # Prüfen auf Übereinstimmung, unabhängig von der Reihenfolge
+        if (($userAnswers | Sort-Object) -eq ($correctAnswers | Sort-Object)) {
             Write-Host "✅ Richtig!"
             $correctCount++
         } else {
